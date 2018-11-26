@@ -8,7 +8,7 @@ import (
 
 
 func main() {
-	produceMessageInKafka()  //go produceMessageInKafka ne marche pas
+	produceMessageInKafka()  //go produceMessageInKafka ne fait rien, check why
 }
 
 func produceMessageInKafka() {
