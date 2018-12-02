@@ -3,15 +3,29 @@ package main
 import (
 	"log"
 	"github.com/Shopify/sarama"
+	"time"
+	"fmt"
 )
 
 func checkConsumerState (client sarama.Client, topic string, groupId string, messages chan string) {
-	//TODO, groupIds array string
-	//TODO getconsumerOffset for each topic/groupId
-	//TODO messages to channel
+
+	ticker := time.NewTicker(5 * time.Second)
+
+	lastOffset := int64(0)
+	for range ticker.C {
+		requestedLastOffset, err := getConsumerOffset(client,topic, groupId)
+		if err != nil {
+			panic(err)
+		}
+		if lastOffset == requestedLastOffset {
+			messages <- fmt.Sprint("consumer - still same offset: ", lastOffset)
+		}
+
+		lastOffset = requestedLastOffset
+	}
 }
 
-func getConsumerOffset (client sarama.Client, groupId string, topic string) (int64, error)  {
+func getConsumerOffset (client sarama.Client, topic string, groupId string) (int64, error)  {
 
 	offsetManager, err := sarama.NewOffsetManagerFromClient(groupId, client)
 	if err != nil {

@@ -15,7 +15,24 @@ var (
 )
 
 func main() {
-	messages := make(chan string)
+	printerConsumer := func(m string) error {
+		fmt.Println(m)
+		return nil
+	}
+
+	printerProducer := func(m string) error {
+		fmt.Println(m)
+		return nil
+	}
+
+	check(printerConsumer, printerProducer)
+
+}
+
+
+func check(printerConsumer Notifier, printerProducer Notifier) {
+	producerStateChan := make(chan string)
+	consumerStateChan := make(chan string)
 	flag.Parse()
 	if *brokers == "" {
 		flag.PrintDefaults()
@@ -28,36 +45,34 @@ func main() {
 
 	client, _ :=sarama.NewClient(brokerList, config)
 
-	go checkProducerState(client, messages, "test")
+	go checkProducerState(client,"test", producerStateChan)
+	go checkConsumerState(client, "test", "my-consumer-group", consumerStateChan)
 
 	//TODO go checkConsumerState
 	//TODO get topics, groupIds configurable
 	//TODO tests
 
-	notify(messages,
-		func(m string) error {
-			//TODO send email
-			//TODO send slack notification
-			fmt.Println(m)
-			return nil
-		})
+
+	for{
+		select {
+		case msg, _ := <-producerStateChan: notify(msg, printerProducer)
+		case msg, _ := <-consumerStateChan: notify(msg, printerConsumer)
+		}
+	}
 }
 
 type Notifier func (string) error
 
-func notify(messages chan string, applies ... Notifier ) error{
-	for m := range messages {
+func notify(message string, applies ...Notifier ) error{
 		var g errgroup.Group
 		for _,apply := range applies {
 			g.Go(func() error {
-				return apply(m)
+				return apply(message)
 			})
 		}
 		if err := g.Wait(); err != nil{
 			return err
 		}
-
-	}
-	return nil
+		return nil
 }
 

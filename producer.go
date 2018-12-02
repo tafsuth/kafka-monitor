@@ -7,11 +7,7 @@ import (
 )
 
 
-func main() {
-	produceMessageInKafka()  //go produceMessageInKafka ne fait rien, check why
-}
-
-func produceMessageInKafka() {
+func produceOneMessage() {
 
 	config := sarama.NewConfig()
 	config.Producer.RequiredAcks = sarama.WaitForAll

@@ -6,7 +6,7 @@ import (
 	"github.com/Shopify/sarama"
 )
 
-func checkProducerState(client sarama.Client, messages chan string, topic string) {
+func checkProducerState(client sarama.Client, topic string, messages chan string) {
 
 	ticker := time.NewTicker(5 * time.Second)
 
@@ -17,7 +17,7 @@ func checkProducerState(client sarama.Client, messages chan string, topic string
 			panic(err)
 		}
 		if lastOffset == requestedLastOffset {
-			messages <- fmt.Sprintln("still same offset:", lastOffset)
+			messages <- fmt.Sprint("producer - still same offset: ", lastOffset)
 		}
 
 		lastOffset = requestedLastOffset
